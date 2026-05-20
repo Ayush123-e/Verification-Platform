@@ -64,9 +64,9 @@ The frontend runs on `http://localhost:5173` and the backend on `http://localhos
 ---
 
 ## Features
-- 🔐 JWT-based authentication (Signup / Login)
-- 👤 Candidate registration with Aadhaar & PAN
-- ✅ Automated mock Aadhaar + PAN verification
-- 📊 Dashboard with stats and candidate table
-- 📄 Printable verification audit report
-- 🌙 Dark-mode glassmorphism UI
+-  JWT-based authentication (Signup / Login)
+-  Candidate registration with Aadhaar & PAN
+-  Automated mock Aadhaar + PAN verification
+-  Dashboard with stats and candidate table
+-  Printable verification audit report
+-  Dark-mode glassmorphism UI
