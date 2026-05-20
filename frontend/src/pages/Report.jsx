@@ -197,7 +197,7 @@ const Report = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '16px', marginBottom: '20px' }}>
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem' }}>
                 <CheckSquare size={18} style={{ color: 'var(--color-primary)' }} />
-                1. Aadhaar Card Verification
+                1. Aadhaar Card Verification (UIDAI Gateway)
               </h4>
               <span className={aadhaarResult.status === 'VERIFIED' ? 'badge badge-pass' : 'badge badge-fail'}>
                 {aadhaarResult.status === 'VERIFIED' ? 'UIDAI Cleared' : 'UIDAI Failed'}
@@ -213,29 +213,61 @@ const Report = () => {
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Report Message</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Gateway Reference ID</span>
+                  <p style={{ fontFamily: 'monospace', fontWeight: '600', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+                    {aadhaarResult.referenceId || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Gateway Response</span>
                   <p style={{ fontWeight: '500', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {aadhaarResult.status === 'VERIFIED' 
+                    {aadhaarResult.gatewayMessage || (aadhaarResult.status === 'VERIFIED'
                       ? 'Demographic match successful with National Identity Registry.'
-                      : 'Verification rejected: Identity not active or details mismatch.'}
+                      : 'Verification rejected: Identity not active or details mismatch.')}
                   </p>
                 </div>
               </div>
 
-              {/* Audit matching checklist */}
-              <div style={{ marginTop: '10px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Demographic Verification Parameters</span>
-                <div style={{ display: 'flex', gap: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                    {aadhaarResult.status === 'VERIFIED' ? (
-                      <Check size={16} style={{ color: 'var(--color-success)' }} />
-                    ) : (
-                      <X size={16} style={{ color: 'var(--color-error)' }} />
+              {/* Extracted data from mock API */}
+              {aadhaarResult.extractedData && (
+                <div style={{ background: 'rgba(99,102,241,0.04)', borderRadius: '10px', padding: '14px 18px', border: '1px solid rgba(99,102,241,0.1)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Extracted Demographic Data</span>
+                  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {aadhaarResult.extractedData.nameMatch
+                        ? <Check size={15} style={{ color: 'var(--color-success)' }} />
+                        : <X size={15} style={{ color: 'var(--color-error)' }} />}
+                      <span>Name Match</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {aadhaarResult.extractedData.dobMatch
+                        ? <Check size={15} style={{ color: 'var(--color-success)' }} />
+                        : <X size={15} style={{ color: 'var(--color-error)' }} />}
+                      <span>DOB Match</span>
+                    </div>
+                    {aadhaarResult.extractedData.gender && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Gender:</span>
+                        <span>{aadhaarResult.extractedData.gender}</span>
+                      </div>
                     )}
-                    <span>Identity Status Cleared</span>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Fallback checklist when no extracted data */}
+              {!aadhaarResult.extractedData && (
+                <div style={{ marginTop: '4px' }}>
+                  <div style={{ display: 'flex', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {aadhaarResult.status === 'VERIFIED'
+                        ? <Check size={16} style={{ color: 'var(--color-success)' }} />
+                        : <X size={16} style={{ color: 'var(--color-error)' }} />}
+                      <span>Identity Status Cleared</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -244,7 +276,7 @@ const Report = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '16px', marginBottom: '20px' }}>
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem' }}>
                 <CheckSquare size={18} style={{ color: 'var(--color-primary)' }} />
-                2. PAN Card Registry Verification
+                2. PAN Card Registry Verification (NSDL Gateway)
               </h4>
               <span className={panResult.status === 'VERIFIED' ? 'badge badge-pass' : 'badge badge-fail'}>
                 {panResult.status === 'VERIFIED' ? 'Registry Checked' : 'NSDL Failed'}
@@ -260,31 +292,70 @@ const Report = () => {
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Report Message</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Gateway Reference ID</span>
+                  <p style={{ fontFamily: 'monospace', fontWeight: '600', fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+                    {panResult.referenceId || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Gateway Response</span>
                   <p style={{ fontWeight: '500', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {panResult.status === 'VERIFIED' 
+                    {panResult.gatewayMessage || (panResult.status === 'VERIFIED'
                       ? 'Taxpayer active record found in NSDL registry.'
-                      : 'Verification rejected: Inactive PAN or taxpayer details mismatch.'}
+                      : 'Verification rejected: Inactive PAN or taxpayer details mismatch.')}
                   </p>
                 </div>
               </div>
 
-              {/* Audit matching checklist */}
-              <div style={{ marginTop: '10px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Demographic Verification Parameters</span>
-                <div style={{ display: 'flex', gap: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                    {panResult.status === 'VERIFIED' ? (
-                      <Check size={16} style={{ color: 'var(--color-success)' }} />
-                    ) : (
-                      <X size={16} style={{ color: 'var(--color-error)' }} />
+              {/* Extracted data from mock API */}
+              {panResult.extractedData && (
+                <div style={{ background: 'rgba(99,102,241,0.04)', borderRadius: '10px', padding: '14px 18px', border: '1px solid rgba(99,102,241,0.1)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Extracted Tax Registry Data</span>
+                  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {panResult.extractedData.nameMatch
+                        ? <Check size={15} style={{ color: 'var(--color-success)' }} />
+                        : <X size={15} style={{ color: 'var(--color-error)' }} />}
+                      <span>Name Match</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {panResult.extractedData.dobMatch
+                        ? <Check size={15} style={{ color: 'var(--color-success)' }} />
+                        : <X size={15} style={{ color: 'var(--color-error)' }} />}
+                      <span>DOB Match</span>
+                    </div>
+                    {panResult.extractedData.category && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Category:</span>
+                        <span>{panResult.extractedData.category}</span>
+                      </div>
                     )}
-                    <span>Taxpayer Status Cleared</span>
+                    {panResult.extractedData.panStatus && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--color-success)' }}>
+                        <Check size={15} style={{ color: 'var(--color-success)' }} />
+                        <span>PAN {panResult.extractedData.panStatus}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Fallback checklist */}
+              {!panResult.extractedData && (
+                <div style={{ marginTop: '4px' }}>
+                  <div style={{ display: 'flex', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                      {panResult.status === 'VERIFIED'
+                        ? <Check size={16} style={{ color: 'var(--color-success)' }} />
+                        : <X size={16} style={{ color: 'var(--color-error)' }} />}
+                      <span>Taxpayer Status Cleared</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+
 
         </div>
 

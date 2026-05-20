@@ -30,30 +30,42 @@ const triggerVerification = async (req, res) => {
       });
     }
 
-    // Call Mock Aadhaar & PAN verification concurrently
+    // Point 3: Call Mock External API Gateways concurrently (UIDAI + NSDL)
+    console.log(`[Mock API] Calling UIDAI Aadhaar gateway for candidate ${candidateId}...`);
+    console.log(`[Mock API] Calling NSDL PAN gateway for candidate ${candidateId}...`);
+
     const [aadhaarRes, panRes] = await Promise.all([
       verifyAadhaar(candidate.aadhaarNumber, candidate.fullName, candidate.dob),
       verifyPAN(candidate.panNumber, candidate.fullName, candidate.dob)
     ]);
 
-    // Map mock results to Mongoose schema values
+    console.log(`[Mock API] UIDAI response:`, { status: aadhaarRes.status, referenceId: aadhaarRes.referenceId });
+    console.log(`[Mock API] NSDL response:`,  { status: panRes.status,    referenceId: panRes.referenceId });
+
+    // Map mock gateway results to Mongoose schema values
     const aadhaarStatus = aadhaarRes.status === 'success' ? 'verified' : 'rejected';
-    const panStatus = panRes.status === 'success' ? 'verified' : 'rejected';
+    const panStatus     = panRes.status    === 'success' ? 'verified' : 'rejected';
 
     let candidateStatus = 'completed';
     if (aadhaarStatus === 'rejected' || panStatus === 'rejected') {
       candidateStatus = 'failed';
     }
 
-    // Save report to database
+    // Save full gateway response to database
     const verificationReport = await Verification.create({
       candidateId,
       aadhaarStatus,
+      aadhaarReferenceId: aadhaarRes.referenceId || null,
+      aadhaarMessage:     aadhaarRes.message    || null,
+      aadhaarExtracted:   aadhaarRes.extractedData || null,
       panStatus,
+      panReferenceId: panRes.referenceId || null,
+      panMessage:     panRes.message    || null,
+      panExtracted:   panRes.extractedData || null,
       verificationDate: new Date()
     });
 
-    // Update candidate status in db
+    // Update candidate status in DB
     candidate.status = candidateStatus;
     await candidate.save();
 
@@ -70,6 +82,7 @@ const triggerVerification = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error processing candidate verification' });
   }
 };
+
 
 /**
  * Retrieve background report
@@ -95,7 +108,7 @@ const getVerificationReport = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Verification report has not been triggered yet.' });
     }
 
-    // Calculate overall status based on simplified fields
+    // Calculate overall status
     let overallStatus = 'PENDING';
     if (report.aadhaarStatus === 'verified' && report.panStatus === 'verified') {
       overallStatus = 'VERIFIED';
@@ -103,6 +116,7 @@ const getVerificationReport = async (req, res) => {
       overallStatus = 'FAILED';
     }
 
+    // Point 4: Return structured professional report with full gateway metadata
     return res.json({
       success: true,
       data: {
@@ -112,14 +126,22 @@ const getVerificationReport = async (req, res) => {
           email: candidate.email,
           dob: candidate.dob
         },
+        // Aadhaar (UIDAI) gateway result
         aadhaarResult: {
-          aadhaarNumber: candidate.aadhaarNumber,
-          status: report.aadhaarStatus.toUpperCase(),
+          aadhaarNumber:   candidate.aadhaarNumber,
+          status:          report.aadhaarStatus.toUpperCase(),
+          referenceId:     report.aadhaarReferenceId || 'N/A',
+          gatewayMessage:  report.aadhaarMessage    || 'N/A',
+          extractedData:   report.aadhaarExtracted  || null,
           verificationDate: report.verificationDate
         },
+        // PAN (NSDL) gateway result
         panResult: {
-          panNumber: candidate.panNumber,
-          status: report.panStatus.toUpperCase(),
+          panNumber:       candidate.panNumber,
+          status:          report.panStatus.toUpperCase(),
+          referenceId:     report.panReferenceId || 'N/A',
+          gatewayMessage:  report.panMessage    || 'N/A',
+          extractedData:   report.panExtracted  || null,
           verificationDate: report.verificationDate
         },
         overallStatus
@@ -130,6 +152,7 @@ const getVerificationReport = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error retrieving verification report' });
   }
 };
+
 
 /**
  * Get dashboard status metrics for user
