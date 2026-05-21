@@ -9,17 +9,37 @@ const { errorHandler }   = require('./middleware/errorHandler');
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
-// Using a callback for `origin` so the server reflects back the
-// requesting origin — required when credentials:true is set.
-// The wildcard '*' cannot be used together with credentials.
+// CORS configuration for production and development
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'https://verification-platform-kwgt.vercel.app',
+  // Add your frontend Vercel URLs here
+];
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman, server-to-server)
-    // and any browser origin in development / any deployed frontend
-    callback(null, origin || '*');
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow all Vercel preview deployments and allowed origins
+    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow localhost in development
+    if (origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    callback(null, true); // Allow all for now
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

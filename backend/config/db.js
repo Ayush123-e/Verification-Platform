@@ -6,7 +6,7 @@ const connectDB = async () => {
   // Reuse existing connection
   if (mongoose.connection.readyState === 1) {
     console.log('MongoDB already connected');
-    return;
+    return mongoose.connection;
   }
 
   // Reuse in-progress connection attempt
@@ -17,11 +17,13 @@ const connectDB = async () => {
   const mongoUri = process.env.MONGO_URI;
 
   if (!mongoUri) {
-    console.error('MONGO_URI environment variable is not set!');
-    throw new Error('MONGO_URI is required');
+    const error = new Error('MONGO_URI environment variable is not set!');
+    console.error('❌', error.message);
+    throw error;
   }
 
-  console.log('Attempting to connect to MongoDB...');
+  console.log('🔄 Attempting to connect to MongoDB...');
+  console.log('   Environment:', process.env.NODE_ENV || 'development');
 
   // Special configuration for MongoDB Atlas with Node.js v20+
   const isAtlas = mongoUri.includes('mongodb+srv://');
@@ -48,15 +50,15 @@ const connectDB = async () => {
       console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
       console.log(`   Database: ${conn.connection.name}`);
       connectionPromise = null;
-      return conn;
+      return conn.connection;
     })
     .catch((error) => {
       console.error(`❌ MongoDB connection failed: ${error.message}`);
-      console.error('   Please check:');
-      console.error('   1. MongoDB URI is correct');
-      console.error('   2. Database user has correct permissions');
-      console.error('   3. IP address is whitelisted in MongoDB Atlas (0.0.0.0/0)');
-      console.error('   4. Network connection is stable');
+      console.error('   Troubleshooting:');
+      console.error('   1. Check MONGO_URI environment variable');
+      console.error('   2. Verify MongoDB Atlas IP whitelist (0.0.0.0/0)');
+      console.error('   3. Confirm database user credentials');
+      console.error('   4. Check NODE_TLS_REJECT_UNAUTHORIZED setting');
       connectionPromise = null;
       throw error;
     });
