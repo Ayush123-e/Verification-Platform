@@ -22,9 +22,22 @@ initDB();
 
 // Vercel serverless function handler with CORS
 module.exports = async (req, res) => {
-  // Set CORS headers for all requests
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
+  // Get the origin from the request
+  const origin = req.headers.origin;
+  
+  // Allowed origins
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://vshield-frontend.vercel.app'
+  ];
+
+  // Set CORS headers for allowed origins
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
