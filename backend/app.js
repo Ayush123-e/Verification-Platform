@@ -9,14 +9,14 @@ const { errorHandler }   = require('./middleware/errorHandler');
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
-// CORS configuration - Allow all Vercel deployments and localhost
+// CORS configuration - Allow specific origins only
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow all origins (including Vercel deployments)
-    callback(null, true);
-  },
+  origin: [
+    "http://localhost:5173",  // Local development
+    "https://vshield-frontend.vercel.app"  // Production frontend
+  ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'X-JSON'],
   maxAge: 86400 // 24 hours
