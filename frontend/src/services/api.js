@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const isLocalhost = Boolean(
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '[::1]' ||
+  window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+);
+
 const API = axios.create({
-  baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:5001/api',
+  baseURL: isLocalhost ? 'http://localhost:5000/api' : '/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
