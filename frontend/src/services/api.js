@@ -1,13 +1,16 @@
 import axios from 'axios';
 
 const API = axios.create({
-  // Use the deployed Vercel backend URL for all environments.
-  baseURL: 'https://verification-platform-xi.vercel.app/api',
+  // Uses VITE_API_URL if provided. Otherwise, uses the deployed Vercel URL in production or localhost:5001 locally.
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://verification-platform-xi.vercel.app/api' : 'http://localhost:5001/api'),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Debug: Log the API URL being used (remove in production)
+console.log('🔗 API Base URL:', API.defaults.baseURL);
 
 // Request interceptor for injecting JWT token automatically
 API.interceptors.request.use(
