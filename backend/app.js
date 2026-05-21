@@ -12,7 +12,8 @@ const app = express();
 // CORS configuration - Allow specific origins only
 app.use(cors({
   origin: [
-    "http://localhost:5173",  // Local development
+    "http://localhost:5173",  // Local development (Vite default)
+    "http://localhost:5174",  // Local development (alternate port)
     "https://vshield-frontend.vercel.app"  // Production frontend
   ],
   credentials: true,
