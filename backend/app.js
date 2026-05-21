@@ -9,35 +9,17 @@ const { errorHandler }   = require('./middleware/errorHandler');
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
-// CORS configuration for production and development
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'https://verification-platform-kwgt.vercel.app',
-  // Add your frontend Vercel URLs here
-];
-
+// CORS configuration - Allow all Vercel deployments and localhost
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview deployments and allowed origins
-    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // Allow localhost in development
-    if (origin.includes('localhost')) {
-      return callback(null, true);
-    }
-    
-    callback(null, true); // Allow all for now
+    // Allow all origins (including Vercel deployments)
+    callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-JSON'],
+  maxAge: 86400 // 24 hours
 }));
 
 app.use(express.json());
