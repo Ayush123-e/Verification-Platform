@@ -1,5 +1,4 @@
 // Vercel serverless function entry point
-// Note: dotenv is not needed in Vercel (env vars are auto-injected)
 const app = require('../backend/app');
 const connectDB = require('../backend/config/db');
 
@@ -14,7 +13,6 @@ const initDB = async () => {
       console.log('Database connected successfully');
     } catch (err) {
       console.error('Failed to connect to MongoDB:', err.message);
-      // Don't throw - let the app handle it gracefully
     }
   }
 };
@@ -22,5 +20,23 @@ const initDB = async () => {
 // Initialize on cold start
 initDB();
 
-// Export the Express app as a serverless function
-module.exports = app;
+// Vercel serverless function handler with CORS
+module.exports = async (req, res) => {
+  // Set CORS headers for all requests
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // Pass request to Express app
+  return app(req, res);
+};
