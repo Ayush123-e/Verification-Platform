@@ -1,19 +1,16 @@
 import axios from 'axios';
 
-const isLocalhost = Boolean(
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '[::1]' ||
-  window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
-);
-
 const API = axios.create({
-  baseURL: isLocalhost ? 'http://localhost:5000/api' : '/api',
+  // Uses VITE_API_URL from deployment environment (Render, Railway, etc.)
+  // Falls back to localhost:5001 for local development
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
+// Request interceptor for injecting JWT token automatically
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -27,12 +24,15 @@ API.interceptors.request.use(
   }
 );
 
+// Response interceptor for handling global errors (e.g. token expired)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      // If unauthorized (token invalid/expired), clear session and redirect
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      // Only redirect if we are not already on login/signup pages
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signup')) {
         window.location.href = '/login';
       }
