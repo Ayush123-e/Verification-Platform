@@ -15,7 +15,11 @@ const app = express();
 connectDB().then(() => console.log('DB init complete')).catch(console.error);
 
 app.use(cors({
-  origin: '*', 
+  origin: [
+    'https://verification-platform-xi.vercel.app',
+    'http://localhost:5000',
+    'http://localhost:5001'
+  ],
   credentials: true
 }));
 app.use(express.json());
