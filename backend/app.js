@@ -9,8 +9,15 @@ const { errorHandler }   = require('./middleware/errorHandler');
 const app = express();
 
 // ── Middleware ──────────────────────────────────────────────
+// Using a callback for `origin` so the server reflects back the
+// requesting origin — required when credentials:true is set.
+// The wildcard '*' cannot be used together with credentials.
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, server-to-server)
+    // and any browser origin in development / any deployed frontend
+    callback(null, origin || '*');
+  },
   credentials: true
 }));
 app.use(express.json());

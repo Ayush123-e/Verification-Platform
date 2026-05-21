@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.data);
         return { success: true };
       }
+      return { success: false, message: data.message || 'Login failed. Please verify credentials.' };
     } catch (error) {
       return {
         success: false,
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.data);
         return { success: true };
       }
+      return { success: false, message: data.message || 'Signup failed. Please try again.' };
     } catch (error) {
       return {
         success: false,
