@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import { getCandidates, getDashboardStats, triggerVerification } from '../services/verificationService';
+import { maskAadhaar, maskPAN, formatDate } from '../utils/helpers';
+import Navbar from '../components/Navbar';
 import { 
   Users, CheckCircle2, AlertTriangle, XCircle, Search, 
-  Plus, LogOut, ShieldAlert, Sparkles, Clipboard, ArrowUpRight, Loader
+  Sparkles, Clipboard, ArrowUpRight, Loader
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+
 
 const Dashboard = () => {
   const [candidates, setCandidates] = useState([]);
@@ -24,9 +27,8 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   
-  const { user, logoutUser } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
-  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -34,7 +36,6 @@ const Dashboard = () => {
         getCandidates(),
         getDashboardStats()
       ]);
-      
       if (candidatesData.success) setCandidates(candidatesData.data);
       if (statsData.success) setStats(statsData.data);
     } catch (err) {
@@ -44,15 +45,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleLogout = () => {
-    logoutUser();
-    showToast('Signed out of session.', 'info');
-    navigate('/login');
-  };
+  useEffect(() => { fetchData(); }, []);
 
   const handleRunVerification = async (candidateId) => {
     setVerifyingMap(prev => ({ ...prev, [candidateId]: true }));
@@ -64,76 +57,25 @@ const Dashboard = () => {
         await fetchData();
       }
     } catch (err) {
-      console.error('Verification error:', err);
       showToast(err.response?.data?.message || 'Verification process failed.', 'error');
     } finally {
       setVerifyingMap(prev => ({ ...prev, [candidateId]: false }));
     }
   };
 
-  // Masking helpers for UI rendering
-  const maskAadhaar = (aadhaar) => {
-    if (!aadhaar || aadhaar.length < 4) return 'XXXX-XXXX-XXXX';
-    return `XXXX-XXXX-${aadhaar.slice(-4)}`;
-  };
-
-  const maskPAN = (pan) => {
-    if (!pan || pan.length < 4) return 'XXXXX-XXXX';
-    return `XXXXX${pan.slice(-4)}`;
-  };
-
   // Filtering candidates
   const filteredCandidates = candidates.filter(candidate => {
-    const matchesSearch = candidate.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = candidate.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           candidate.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
     if (statusFilter === 'all') return matchesSearch;
     return matchesSearch && candidate.status === statusFilter;
   });
 
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-main)', display: 'flex', flexDirection: 'column' }}>
       
-      {/* Navigation Header */}
-      <header className="glass-panel" style={{
-        borderRadius: 0,
-        borderTop: 'none',
-        borderLeft: 'none',
-        borderRight: 'none',
-        padding: '16px 40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        zIndex: 10,
-        position: 'sticky',
-        top: 0
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-            padding: '8px',
-            borderRadius: '8px',
-            color: '#fff',
-            display: 'flex'
-          }}>
-            <ShieldAlert size={22} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '1.2rem', fontWeight: '700', lineHeight: 1 }}>vShield</h1>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Verification Portal</span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{user?.name || 'Administrator'}</p>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{user?.company || 'Company Inc'}</span>
-          </div>
-          <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: '0.85rem' }}>
-            <LogOut size={16} /> Sign Out
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Content Body */}
       <main style={{ padding: '40px 40px', flex: 1, display: 'flex', flexDirection: 'column', gap: '40px', maxWidth: '1440px', margin: '0 auto', width: '100%' }}>
@@ -156,9 +98,6 @@ const Dashboard = () => {
               Register new hires and trigger standard biometric and tax registry checks in seconds.
             </p>
           </div>
-          <Link to="/submit-candidate" className="btn btn-primary">
-            <Plus size={18} /> Register Candidate
-          </Link>
         </div>
 
         {/* Loading placeholder */}

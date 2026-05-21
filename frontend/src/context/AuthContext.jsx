@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { getCurrentUser, login, signup, logout } from '../services/authService';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
+
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.data);
         return { success: true };
       }
+      return { success: false, message: data.message || 'Login failed. Please verify credentials.' };
     } catch (error) {
       return {
         success: false,
@@ -41,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.data);
         return { success: true };
       }
+      return { success: false, message: data.message || 'Signup failed. Please try again.' };
     } catch (error) {
       return {
         success: false,
