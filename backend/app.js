@@ -24,6 +24,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // ── Routes ──────────────────────────────────────────────────
+// Root route for Vercel deployment check
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'vShield API is running.',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      candidates: '/api/candidates',
+      verifications: '/api/verifications'
+    }
+  });
+});
+
 app.use('/api/auth',          authRoutes);
 app.use('/api/candidates',    candidateRoutes);
 app.use('/api/verifications', verificationRoutes);
